@@ -143,6 +143,71 @@ async def news(ticker: str | None = None, entity: str | None = None, limit: int 
     return out
 
 
+@app.get("/api/entity/{entity_id}")
+async def entity(entity_id: str, ticker: str | None = None):
+    """Everything the entity page needs: profile, effect on the stock, history, links, news."""
+    e = _engine()
+    g = e.graph
+    if entity_id not in g.entities:
+        raise HTTPException(404, "unknown entity")
+    ticker = ticker or g.tickers[0]
+    at = now_utc()
+    neighbours = {l.dst for l in g.out.get(entity_id, [])} | {l.src for l in g.links if l.dst == entity_id}
+    async with Session() as s:
+        ent_rows = list(await s.scalars(select(EntityImpact).where(
+            EntityImpact.entity_id.in_(neighbours | {entity_id}),
+            EntityImpact.published_at >= at - signals.LOOKBACK)))
+        tick_rows = list(await s.scalars(select(TickerImpact).where(
+            TickerImpact.ticker == ticker, TickerImpact.published_at >= at - signals.LOOKBACK)))
+    by_entity: dict[str, list] = {}
+    for r in ent_rows:
+        by_entity.setdefault(r.entity_id, []).append(r)
+    own = by_entity.get(entity_id, [])
+    via = [t for t in tick_rows if t.path and t.path[0] == entity_id]
+    week = at - timedelta(days=7)
+    recent = [t for t in via if t.published_at.replace(tzinfo=t.published_at.tzinfo or at.tzinfo) >= week]
+
+    if entity_id == ticker:
+        score = signals.ticker_score(tick_rows, at)
+    else:
+        score = signals.entity_score(own, at)
+    history = []
+    t = at - timedelta(days=7)
+    while t <= at:
+        history.append({"time": int(t.timestamp()), "value": round(signals.entity_score(
+            [r for r in own if signals._aware(r.published_at) <= t], t), 4)})
+        t += timedelta(hours=3)
+
+    node = next(n for n in g.to_json()["nodes"] if n["id"] == entity_id)
+    links = []
+    for l in g.links:
+        if entity_id not in (l.src, l.dst):
+            continue
+        other = l.dst if l.src == entity_id else l.src
+        links.append({
+            "id": other, "name": g.entities[other].name, "type": g.entities[other].type,
+            "relation": l.relation, "direction": "out" if l.src == entity_id else "in",
+            "weight": l.weight, "sign": l.sign,
+            "score": round(signals.ticker_score(tick_rows, at) if other == ticker
+                           else signals.entity_score(by_entity.get(other, []), at), 4),
+        })
+    return {
+        "entity": {**node, "score": round(score, 4)},
+        "ticker": ticker,
+        "effect": {
+            "paths": [{"nodes": p.nodes, "relations": p.relations, "weight": round(p.weight, 3)}
+                      for p in g.paths_to_tickers(entity_id) if p.nodes[-1] == ticker],
+            "contribution": round(sum(signals.decayed(i.impact, i.published_at, i.horizon, at) for i in via), 4),
+            "items_7d": len(recent),
+            "green_7d": sum(1 for i in recent if i.impact > 0.005),
+            "red_7d": sum(1 for i in recent if i.impact < -0.005),
+        },
+        "history": history,
+        "links": sorted(links, key=lambda x: -x["weight"]),
+        "news": await news(entity=entity_id, limit=40),
+    }
+
+
 @app.get("/api/bars/{ticker}")
 async def bars(ticker: str, days: int = 5):
     async with Session() as s:

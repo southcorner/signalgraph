@@ -17,6 +17,8 @@ class Entity:
     context: list[str] = field(default_factory=list)
     query: str | None = None
     role: str | None = None
+    description: str | None = None
+    facts: dict[str, str] = field(default_factory=dict)  # shown on the entity page
     ticker: str | None = None
     nse_symbol: str | None = None
     nse_token: str | None = None
@@ -137,7 +139,8 @@ class Graph:
         return {
             "tickers": self.tickers,
             "nodes": [
-                {"id": e.id, "name": e.name, "type": e.type, "role": e.role, "ticker": e.ticker}
+                {"id": e.id, "name": e.name, "type": e.type, "role": e.role, "ticker": e.ticker,
+                 "description": e.description, "facts": e.facts}
                 for e in self.entities.values()
             ],
             "edges": [

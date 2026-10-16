@@ -29,6 +29,16 @@ SAMPLES = [
      {"hypervault": 0.7}, ("hypervault", 1, 0.3, 0.6, "quarters", "De-risks the data-centre capex with committed demand.")),
     (9, "demo", "news", "[Sample] Krithivasan says deal pipeline remains strong despite macro caution",
      {"krithivasan": 0.3}, ("krithivasan", 1, 0.1, 0.5, "days", "Management commentary; mildly reassuring, low information.")),
+    (55, "demo", "news", "[Sample] MEA reports record passport issuance under Passport Seva 2.0",
+     {"passport_seva": 0.4}, ("passport_seva", 1, 0.04, 0.5, "weeks", "Programme running smoothly; negligible financial effect.")),
+    (46, "demo", "news", "[Sample] BSNL crosses 1 lakh 4G sites, plans 5G upgrade on the same stack",
+     {"bsnl": 0.6, "bsnl_4g": 0.5}, ("bsnl", 1, 0.2, 0.65, "quarters", "Upgrade path extends TCS's scope on the BSNL network.")),
+    (36, "demo", "news", "[Sample] Phoenix Group extends policy administration migration programme",
+     {"phoenix": 0.5}, ("phoenix", 1, 0.08, 0.6, "quarters", "Small scope extension at a UK insurance client.")),
+    (22, "demo", "news", "[Sample] JLR restarts UK assembly lines after weeks-long shutdown",
+     {"jlr": 0.5}, ("jlr", 1, 0.15, 0.6, "weeks", "Client recovery eases risk to TCS's manufacturing revenue.")),
+    (14, "demo", "news", "[Sample] Seksaria says margins should improve in H2 on pricing and utilisation",
+     {"seksaria": 0.4, "TCS": 0.3}, ("seksaria", 1, 0.12, 0.55, "weeks", "CFO margin commentary; modestly positive.")),
     (4, "demo", "news", "[Sample] Marks & Spencer reviews IT vendor arrangements after cyber incident probe",
      {"mands": -0.5}, ("mands", -1, 0.12, 0.6, "weeks", "Small client; possible scope loss for TCS.")),
 ]
@@ -74,8 +84,27 @@ def _item(title: str, hours_ago: float, kind: str = "news", entities=None) -> Ra
                    summary="Invented sample for offline demo.", hint_entities=list(entities or []))
 
 
+CALENDAR = [
+    (6, "bsnl_4g", "[Sample] BSNL 5G pilot milestone review"),
+    (21, "accenture", "[Sample] Accenture quarterly results (bellwether read-through)"),
+    (84, "TCS", "[Sample] Board meeting: quarterly results and dividend"),
+]
+
+
 async def seed(engine) -> None:
+    from sqlalchemy import select
+
+    from .db import Session
+    from .models import CalendarEvent
+
     await engine.ingest([_item(s[3], s[0], s[2], s[4].keys()) for s in SAMPLES], max_age=None)
+    async with Session() as s:
+        for days, entity, title in CALENDAR:
+            fp = f"demo:{entity}:{days}"
+            if not await s.scalar(select(CalendarEvent.id).where(CalendarEvent.fingerprint == fp)):
+                s.add(CalendarEvent(fingerprint=fp, entity_id=entity, date=now_utc() + timedelta(days=days),
+                                    title=title, source="demo"))
+        await s.commit()
 
 
 async def drip(engine, every: float = 25.0) -> None:

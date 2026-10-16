@@ -6,6 +6,7 @@
 #   context  optional: an alias only counts if one of these words is also present
 #            (keeps broad aliases like "rupee" from flooding the scorer)
 #   query    Google News query for this entity (defaults to the first alias)
+#   description, facts  shown on the entity page in the dashboard
 #
 # links: how news about a node reaches a tracked stock.
 #   weight   0..1 exposure. Client revenue shares are mostly undisclosed, so these
@@ -15,148 +16,303 @@
 #            direction itself from the relation.
 #
 # Facts here were current as of mid-2026. Review them each quarter
-# (annual report, investor deck, concall transcripts).
+# (annual report, investor deck, concall transcripts). '(est.)' marks judgement calls.
 
 entities:
-  - id: TCS
-    name: Tata Consultancy Services
-    type: company
-    aliases: [TCS, Tata Consultancy Services, Tata Consultancy]
-    query: '"TCS" OR "Tata Consultancy Services"'
-    ticker: TCS
-    nse_symbol: TCS
-    nse_token: "11536"      # Angel One symbol token for TCS-EQ on NSE
-    bse_code: "532540"
-
-  # People
-  - id: chandrasekaran
-    name: N. Chandrasekaran
-    type: person
-    role: Chairman, TCS & Tata Sons
-    aliases: [Chandrasekaran, Chandra Tata]
-  - id: krithivasan
-    name: K. Krithivasan
-    type: person
-    role: CEO & MD
-    aliases: [Krithivasan]
-  - id: seksaria
-    name: Samir Seksaria
-    type: person
-    role: CFO
-    aliases: [Samir Seksaria, Seksaria]
-  - id: aarthi
-    name: Aarthi Subramanian
-    type: person
-    role: President & COO
-    aliases: [Aarthi Subramanian]
-
-  # Parent
-  - id: tata_sons
-    name: Tata Sons
-    type: parent
-    aliases: [Tata Sons, Tata Trusts]
-
-  # Projects
-  - id: hypervault
-    name: HyperVault AI data centre
-    type: project
-    role: ~1 GW AI data-centre build-out in India (announced Oct 2025)
-    aliases: [HyperVault]
-    query: 'TCS HyperVault OR "TCS data centre"'
-  - id: bsnl_4g
-    name: BSNL 4G/5G network rollout
-    type: project
-    role: Indigenous 4G stack build with Tejas Networks, C-DOT
-    aliases: [BSNL 4G, BSNL 5G, indigenous 4G]
-    query: '"BSNL 4G" TCS'
-
-  # Clients
-  - id: bsnl
-    name: BSNL
-    type: client
-    aliases: [BSNL, Bharat Sanchar Nigam]
-  - id: jlr
-    name: Jaguar Land Rover
-    type: client
-    role: Tata group company, major IT/ops client
-    aliases: [Jaguar Land Rover, JLR]
-  - id: mands
-    name: Marks & Spencer
-    type: client
-    aliases: [Marks & Spencer, Marks and Spencer, M&S]
-  - id: phoenix
-    name: Phoenix Group
-    type: client
-    role: UK insurer, large multi-year deal
-    aliases: [Phoenix Group]
-  - id: passport_seva
-    name: Passport Seva (MEA)
-    type: client
-    role: Government of India programme run by TCS
-    aliases: [Passport Seva]
-
-  # Partners
-  - id: tejas
-    name: Tejas Networks
-    type: partner
-    aliases: [Tejas Networks]
-    ticker: TEJASNET
-
-  # Competitors and bellwethers
-  - id: infosys
-    name: Infosys
-    type: competitor
-    aliases: [Infosys]
-    ticker: INFY
-  - id: hcltech
-    name: HCLTech
-    type: competitor
-    aliases: [HCLTech, HCL Tech, HCL Technologies]
-    ticker: HCLTECH
-  - id: wipro
-    name: Wipro
-    type: competitor
-    aliases: [Wipro]
-    ticker: WIPRO
-  - id: techm
-    name: Tech Mahindra
-    type: competitor
-    aliases: [Tech Mahindra]
-    ticker: TECHM
-  - id: accenture
-    name: Accenture
-    type: competitor
-    role: Global bellwether; its results move Indian IT
-    aliases: [Accenture]
-  - id: cognizant
-    name: Cognizant
-    type: competitor
-    aliases: [Cognizant]
-
-  # Macro / sector themes
-  - id: it_sector
-    name: Indian IT sector
-    type: theme
-    aliases: [Nifty IT, IT stocks, Indian IT, IT services sector, IT majors]
-  - id: h1b
-    name: US H-1B / visa policy
-    type: theme
-    aliases: [H-1B, H1B, H-1B visa]
-  - id: usdinr
-    name: USD/INR
-    type: theme
-    aliases: [rupee, USD/INR, dollar-rupee]
-    context: [IT, exporters, software, Infosys, TCS]
-  - id: us_bfsi
-    name: US BFSI tech spending
-    type: theme
-    role: BFSI is TCS's largest vertical
-    aliases: [BFSI, banking technology spend, bank IT budgets]
-  - id: genai
-    name: GenAI disruption / demand
-    type: theme
-    aliases: [generative AI, GenAI, agentic AI, AI deal]
-    context: [IT services, Indian IT, outsourcing, TCS, Infosys, Wipro, HCLTech]
+- id: TCS
+  name: Tata Consultancy Services
+  type: company
+  aliases:
+  - TCS
+  - Tata Consultancy Services
+  - Tata Consultancy
+  query: '"TCS" OR "Tata Consultancy Services"'
+  ticker: TCS
+  nse_symbol: TCS
+  nse_token: '11536'
+  bse_code: '532540'
+  description: India's largest IT services company by revenue; part of the Tata group.
+  facts:
+    Exchange: 'NSE: TCS · BSE: 532540'
+    Promoter: Tata Sons (~72%)
+    Largest vertical: BFSI (banking, financial services, insurance)
+    HQ: Mumbai
+- id: chandrasekaran
+  name: N. Chandrasekaran
+  type: person
+  role: Chairman, TCS & Tata Sons
+  aliases:
+  - Chandrasekaran
+  - Chandra Tata
+  description: Chairman of Tata Sons and of TCS; led TCS as CEO before moving to the group role.
+  facts:
+    Role: Chairman, Tata Sons & TCS
+    Chairman since: '2017'
+    TCS CEO: 2009–2017
+- id: krithivasan
+  name: K. Krithivasan
+  type: person
+  role: CEO & MD
+  aliases:
+  - Krithivasan
+  description: Chief Executive and Managing Director of TCS; a long-time TCS BFSI leader.
+  facts:
+    Role: CEO & MD
+    In role since: June 2023
+- id: seksaria
+  name: Samir Seksaria
+  type: person
+  role: CFO
+  aliases:
+  - Samir Seksaria
+  - Seksaria
+  description: Chief Financial Officer; fronts results and guidance commentary.
+  facts:
+    Role: CFO
+    In role since: '2021'
+- id: aarthi
+  name: Aarthi Subramanian
+  type: person
+  role: President & COO
+  aliases:
+  - Aarthi Subramanian
+  description: President and Chief Operating Officer; returned to TCS from Tata Sons.
+  facts:
+    Role: President & COO
+    In role since: '2024'
+- id: tata_sons
+  name: Tata Sons
+  type: parent
+  aliases:
+  - Tata Sons
+  - Tata Trusts
+  description: Principal holding company of the Tata group and TCS's promoter. Group governance, capital allocation and dividend
+    needs flow through to TCS.
+  facts:
+    Stake in TCS: ~72%
+    Type: Promoter / parent
+- id: hypervault
+  name: HyperVault AI data centre
+  type: project
+  role: ~1 GW AI data-centre build-out in India (announced Oct 2025)
+  aliases:
+  - HyperVault
+  query: TCS HyperVault OR "TCS data centre"
+  description: 'TCS''s AI data-centre platform announced with Q2 FY26 results: a large capex bet on India AI infrastructure.'
+  facts:
+    Announced: Oct 2025
+    Planned capacity: ~1 GW
+    Co-investor: TPG (per Nov 2025 reports)
+    Watch: Anchor tenants, capex phasing, margins
+- id: bsnl_4g
+  name: BSNL 4G/5G network rollout
+  type: project
+  role: Indigenous 4G stack build with Tejas Networks, C-DOT
+  aliases:
+  - BSNL 4G
+  - BSNL 5G
+  - indigenous 4G
+  query: '"BSNL 4G" TCS'
+  description: Indigenous 4G network for BSNL built by a TCS-led consortium with Tejas Networks (radio) and C-DOT (core).
+  facts:
+    Order: ~₹15,000 cr advance purchase order (2023)
+    Scope: ~1 lakh 4G sites
+    Status: Nationwide launch Sept 2025
+    Watch: 5G upgrade, payment timing, site additions
+- id: bsnl
+  name: BSNL
+  type: client
+  aliases:
+  - BSNL
+  - Bharat Sanchar Nigam
+  description: State-owned telecom operator; TCS's largest Indian government-linked client through the 4G build and its operation.
+  facts:
+    Owner: Government of India
+    Relationship: 4G network build, rollout and maintenance
+    Exposure: Medium (est.)
+- id: jlr
+  name: Jaguar Land Rover
+  type: client
+  role: Tata group company, major IT/ops client
+  aliases:
+  - Jaguar Land Rover
+  - JLR
+  description: Tata group's UK luxury carmaker and a long-standing TCS IT and digital partner. Its production and IT spend
+    affect TCS's manufacturing vertical.
+  facts:
+    Group: Tata Motors (passenger vehicles)
+    Relationship: IT, digital and operations partner
+    2025 event: Cyberattack halted production for weeks (Sept 2025)
+    Exposure: Medium (est.)
+- id: mands
+  name: Marks & Spencer
+  type: client
+  aliases:
+  - Marks & Spencer
+  - Marks and Spencer
+  - M&S
+  description: UK retailer and long-time TCS client.
+  facts:
+    Relationship: IT services
+    2025 event: Cyberattack (Apr 2025); service-desk contract with TCS ended (per reports)
+    Exposure: Low (est.)
+- id: phoenix
+  name: Phoenix Group
+  type: client
+  role: UK insurer, large multi-year deal
+  aliases:
+  - Phoenix Group
+  description: UK's largest long-term savings and retirement business; TCS (via Diligenta) runs large parts of its policy
+    administration.
+  facts:
+    Deal: ~£600m partnership expansion (2023)
+    Relationship: Policy administration platform
+    Exposure: Low (est.)
+- id: passport_seva
+  name: Passport Seva (MEA)
+  type: client
+  role: Government of India programme run by TCS
+  aliases:
+  - Passport Seva
+  description: Government of India passport issuance programme run by TCS since 2008, renewed as Passport Seva 2.0 with e-passports.
+  facts:
+    Client: Ministry of External Affairs
+    Relationship: Build and operate
+    Exposure: Low (est.)
+- id: tejas
+  name: Tejas Networks
+  type: partner
+  aliases:
+  - Tejas Networks
+  ticker: TEJASNET
+  description: Tata group telecom equipment maker; radio supplier in the BSNL 4G consortium TCS leads.
+  facts:
+    Exchange: 'NSE: TEJASNET'
+    Role in project: RAN (radio) equipment
+    Watch: Delivery timelines, BSNL orders
+- id: infosys
+  name: Infosys
+  type: competitor
+  aliases:
+  - Infosys
+  ticker: INFY
+  description: India's second-largest IT services firm; results and deal wins are a read-through for TCS.
+  facts:
+    Exchange: 'NSE: INFY'
+- id: hcltech
+  name: HCLTech
+  type: competitor
+  aliases:
+  - HCLTech
+  - HCL Tech
+  - HCL Technologies
+  ticker: HCLTECH
+  description: Large Indian IT services peer.
+  facts:
+    Exchange: 'NSE: HCLTECH'
+- id: wipro
+  name: Wipro
+  type: competitor
+  aliases:
+  - Wipro
+  ticker: WIPRO
+  description: Indian IT services peer.
+  facts:
+    Exchange: 'NSE: WIPRO'
+- id: techm
+  name: Tech Mahindra
+  type: competitor
+  aliases:
+  - Tech Mahindra
+  ticker: TECHM
+  description: Indian IT services peer with heavy telecom exposure.
+  facts:
+    Exchange: 'NSE: TECHM'
+- id: accenture
+  name: Accenture
+  type: competitor
+  role: Global bellwether; its results move Indian IT
+  aliases:
+  - Accenture
+  description: Global IT services bellwether. Its quarterly outlook often moves Indian IT stocks the next morning.
+  facts:
+    Exchange: 'NYSE: ACN'
+- id: cognizant
+  name: Cognizant
+  type: competitor
+  aliases:
+  - Cognizant
+  description: US-listed peer with a large India delivery base; competes head-on in BFSI and healthcare.
+  facts:
+    Exchange: 'NASDAQ: CTSH'
+- id: it_sector
+  name: Indian IT sector
+  type: theme
+  aliases:
+  - Nifty IT
+  - IT stocks
+  - Indian IT
+  - IT services sector
+  - IT majors
+  description: 'Sector-wide flows and news: Nifty IT moves, sector notes, demand commentary.'
+- id: h1b
+  name: US H-1B / visa policy
+  type: theme
+  aliases:
+  - H-1B
+  - H1B
+  - H-1B visa
+  description: US visa and immigration rules for skilled workers. Tighter rules or higher fees raise onsite costs for Indian
+    IT.
+  facts:
+    Direction: Stricter = negative for TCS
+- id: usdinr
+  name: USD/INR
+  type: theme
+  aliases:
+  - rupee
+  - USD/INR
+  - dollar-rupee
+  context:
+  - IT
+  - exporters
+  - software
+  - Infosys
+  - TCS
+  description: Dollar–rupee exchange rate. Most TCS revenue is in foreign currency, so a weaker rupee lifts reported revenue
+    and margins.
+  facts:
+    Direction: Weaker rupee = positive for TCS
+- id: us_bfsi
+  name: US BFSI tech spending
+  type: theme
+  role: BFSI is TCS's largest vertical
+  aliases:
+  - BFSI
+  - banking technology spend
+  - bank IT budgets
+  description: Technology budgets of US banks and insurers, TCS's largest vertical.
+  facts:
+    Direction: Higher spend = positive
+- id: genai
+  name: GenAI disruption / demand
+  type: theme
+  aliases:
+  - generative AI
+  - GenAI
+  - agentic AI
+  - AI deal
+  context:
+  - IT services
+  - Indian IT
+  - outsourcing
+  - TCS
+  - Infosys
+  - Wipro
+  - HCLTech
+  description: 'Generative and agentic AI: new deal demand on one side, pricing pressure on legacy services on the other.'
+  facts:
+    Direction: Mixed; judged per item
 
 links:
   - {from: chandrasekaran, to: TCS, relation: chairman, weight: 0.5, sign: 1}

@@ -2,73 +2,157 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1a1a19" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#fcfcfb" media="(prefers-color-scheme: light)">
   <title>SignalGraph</title>
   <link rel="stylesheet" href="/static/style.css">
   <script src="/static/vendor/cytoscape.min.js"></script>
   <script src="/static/vendor/lightweight-charts.standalone.production.js"></script>
 </head>
-<body>
-  <header class="topbar">
-    <div class="brand">SignalGraph</div>
-    <select id="ticker" aria-label="Stock"></select>
-    <div class="quote">
+<body data-view="overview">
+  <header class="appbar">
+    <div class="brand" aria-label="SignalGraph">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="6" cy="17" r="3" fill="var(--bad)"/><circle cx="18" cy="7" r="3" fill="var(--good)"/><circle cx="12" cy="12" r="3.4" fill="var(--ink)"/><path d="M8 15.5 10 13.5M14 10.5l2-2" stroke="var(--ink-3)" stroke-width="1.6"/></svg>
+      <span class="brand-name">SignalGraph</span>
+    </div>
+    <label class="ticker-pick">
+      <span class="sr">Stock</span>
+      <select id="ticker"></select>
+    </label>
+    <div class="quote" aria-live="polite">
       <span id="price" class="price">—</span>
       <span id="change" class="change"></span>
     </div>
-    <div id="signal" class="signal neutral" title="Decayed news-impact score, -1 to +1">
-      <span class="sig-icon">●</span><span class="sig-label">NEUTRAL</span><span class="sig-score">0.00</span>
-    </div>
-    <div class="badges">
-      <span id="badge-prices" class="badge">Prices: …</span>
-      <span id="badge-scorer" class="badge">Scorer: …</span>
-      <span id="badge-ws" class="badge"><span class="dot"></span> Live push</span>
-    </div>
+    <button id="signal" class="signal neutral" title="News signal: decayed impact score, −1 to +1">
+      <span class="sig-icon" aria-hidden="true">●</span><span class="sig-label">NEUTRAL</span><span class="sig-score">0.00</span>
+    </button>
+    <button id="status-btn" class="status-btn" aria-label="Data sources status">
+      <span id="ws-dot" class="dot"></span><span id="mode-badge" class="mode-badge"></span>
+    </button>
   </header>
 
-  <main class="grid">
-    <section class="panel graph-panel">
-      <div class="panel-head">
-        <h2>Relationship graph</h2>
-        <div class="legend">
-          <span><i class="sw sw-red"></i>Bad news</span>
-          <span><i class="sw sw-neutral"></i>Quiet</span>
-          <span><i class="sw sw-green"></i>Good news</span>
-          <span class="muted">Dashed link = competitor · node ring = news volume</span>
+  <main id="main">
+    <!-- Overview -->
+    <section id="sec-signal" class="card" data-view="overview">
+      <div class="hero">
+        <div class="hero-top">
+          <div>
+            <div class="eyebrow">News signal · <span class="js-ticker">TCS</span></div>
+            <div class="hero-value"><span id="hero-icon"></span><span id="hero-label">NEUTRAL</span><span id="hero-score" class="hero-score">0.00</span></div>
+          </div>
+          <div class="hero-side">
+            <div class="mini-stat"><span class="muted">24h ago</span><b id="hero-prev">—</b></div>
+            <div class="mini-stat"><span class="muted">News 24h</span><b id="hero-count">—</b></div>
+          </div>
+        </div>
+        <div class="gauge" role="img" id="gauge" aria-label="Signal gauge">
+          <div class="gauge-track"></div>
+          <div class="gauge-tick" id="tick-red"></div><div class="gauge-tick" id="tick-green"></div>
+          <div class="gauge-marker" id="gauge-marker"></div>
+        </div>
+        <div class="gauge-scale"><span>−1 Red</span><span>0</span><span>Green +1</span></div>
+      </div>
+      <h3 class="section-title">What's driving it</h3>
+      <ol id="drivers" class="list"></ol>
+    </section>
+
+    <section id="sec-chart" class="card" data-view="overview">
+      <div class="card-head">
+        <h2>Price &amp; news</h2>
+        <div class="seg" role="tablist" id="range">
+          <button role="tab" data-days="1">1D</button><button role="tab" data-days="5" aria-selected="true">5D</button>
         </div>
       </div>
-      <div id="cy" role="img" aria-label="Relationship graph of entities linked to the stock, coloured by news sentiment"></div>
-    </section>
-
-    <aside class="panel side-panel">
-      <div class="panel-head"><h2 id="side-title">Why this colour</h2><button id="side-reset" class="link" hidden>Back to drivers</button></div>
-      <div id="side-body"></div>
-    </aside>
-
-    <section class="panel chart-panel">
-      <div class="panel-head">
-        <h2>Price with news markers</h2>
-        <span class="muted">▲ good / ▼ bad for the stock · hover a bar for its news</span>
+      <div class="chart-wrap">
+        <div id="price-chart" class="chart"></div>
+        <div id="chart-tip" class="chart-tip" hidden></div>
       </div>
-      <div id="price-chart" class="chart"></div>
-      <div class="panel-head sub"><h2>Signal score</h2><span class="muted">−1 red … +1 green</span></div>
+      <div class="card-head sub"><h2>Signal score</h2><span class="muted">dashed lines = red / green thresholds</span></div>
       <div id="score-chart" class="chart short"></div>
-      <div id="chart-tip" class="chart-tip" hidden></div>
     </section>
 
-    <section class="panel feed-panel">
-      <div class="panel-head"><h2>Live news &amp; filings</h2><span id="feed-filter" class="muted"></span></div>
-      <ol id="feed" class="feed"></ol>
+    <!-- Graph -->
+    <section id="sec-graph" class="card" data-view="graph">
+      <div class="card-head">
+        <h2>Relationship graph</h2>
+        <div class="seg" role="tablist" id="graph-mode">
+          <button role="tab" data-mode="map" aria-selected="true">Map</button><button role="tab" data-mode="list">List</button>
+        </div>
+      </div>
+      <div class="chips" id="type-chips" role="toolbar" aria-label="Highlight by type"></div>
+      <div class="graph-wrap">
+        <div id="cy" role="img" aria-label="Relationship graph of entities linked to the stock, coloured by news sentiment"></div>
+        <div class="graph-legend">
+          <span><i class="sw sw-red"></i>Bad news</span><span><i class="sw sw-neutral"></i>Quiet</span><span><i class="sw sw-green"></i>Good news</span>
+          <span class="muted">Size = exposure · ring = news volume · dashed = competitor</span>
+        </div>
+      </div>
+      <div id="entity-list" class="entity-list" hidden></div>
     </section>
 
-    <section class="panel status-panel">
-      <div class="panel-head"><h2>Upcoming</h2></div>
-      <ul id="calendar" class="plain"></ul>
-      <div class="panel-head sub"><h2>Sources</h2><span id="queue" class="muted"></span></div>
-      <ul id="health" class="plain health"></ul>
+    <!-- News -->
+    <section id="sec-news" class="card" data-view="news">
+      <div class="card-head">
+        <h2>News &amp; filings</h2>
+        <div class="seg" id="tone">
+          <button data-tone="all" aria-selected="true">All</button><button data-tone="good">▲ Good</button><button data-tone="bad">▼ Bad</button>
+        </div>
+      </div>
+      <div class="chips" id="news-chips" role="toolbar" aria-label="Filter news"></div>
+      <ol id="feed" class="list"></ol>
+    </section>
+
+    <!-- Events -->
+    <section id="sec-events" class="card" data-view="events">
+      <div class="card-head"><h2>Upcoming</h2></div>
+      <ul id="calendar" class="list"></ul>
+      <div class="card-head sub"><h2>Data sources</h2><span id="queue" class="muted"></span></div>
+      <ul id="health" class="list"></ul>
+      <div class="card-head sub"><h2>This session</h2></div>
+      <ul id="about" class="list"></ul>
     </section>
   </main>
 
+  <nav class="bottom-nav" aria-label="Sections">
+    <button data-go="overview" aria-current="page">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="2"/><path d="m12 16 4-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>Overview</span></button>
+    <button data-go="graph">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="currentColor"/><circle cx="4.5" cy="6" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="19.5" cy="6" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="20.5" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m6.2 7.2 3.5 3M17.8 7.2l-3.5 3M12 15v3.5" stroke="currentColor" stroke-width="1.6"/></svg>
+      <span>Graph</span></button>
+    <button data-go="news">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 9h8M8 12.5h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <span>News</span><i id="news-badge" class="nav-badge" hidden></i></button>
+    <button data-go="events">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <span>Events</span></button>
+  </nav>
+
+  <!-- Entity detail: right drawer on desktop, full-screen sheet on phones -->
+  <div id="sheet" class="sheet" hidden>
+    <div class="scrim" data-close></div>
+    <aside class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <header class="sheet-head">
+        <button class="icon-btn" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="sheet-titles">
+          <div id="sheet-type" class="eyebrow"></div>
+          <h2 id="sheet-title"></h2>
+        </div>
+        <span id="sheet-score" class="pill"></span>
+      </header>
+      <div class="subtabs" role="tablist" id="sheet-tabs">
+        <button role="tab" data-tab="overview">Overview</button>
+        <button role="tab" data-tab="news">News <span class="count" id="sheet-news-count"></span></button>
+        <button role="tab" data-tab="links">Links <span class="count" id="sheet-links-count"></span></button>
+      </div>
+      <div id="sheet-body" class="sheet-body"></div>
+    </aside>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
   <script src="/static/app.js"></script>
 </body>
 </html>
