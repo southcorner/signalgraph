@@ -1,0 +1,186 @@
+# Relationship graph for TCS.
+#
+# entities: every node that news can be about.
+#   type     company | person | project | client | partner | competitor | parent | theme
+#   aliases  strings matched (word-boundary, case-insensitive) in headlines/summaries
+#   context  optional: an alias only counts if one of these words is also present
+#            (keeps broad aliases like "rupee" from flooding the scorer)
+#   query    Google News query for this entity (defaults to the first alias)
+#
+# links: how news about a node reaches a tracked stock.
+#   weight   0..1 exposure. Client revenue shares are mostly undisclosed, so these
+#            are judgement calls: 0.6 high, 0.35 medium, 0.15 low. Tune them.
+#   sign     +1 good-for-source is good-for-target; -1 for competitors.
+#            Only the offline lexicon scorer uses sign; the LLM reasons about
+#            direction itself from the relation.
+#
+# Facts here were current as of mid-2026. Review them each quarter
+# (annual report, investor deck, concall transcripts).
+
+entities:
+  - id: TCS
+    name: Tata Consultancy Services
+    type: company
+    aliases: [TCS, Tata Consultancy Services, Tata Consultancy]
+    query: '"TCS" OR "Tata Consultancy Services"'
+    ticker: TCS
+    nse_symbol: TCS
+    nse_token: "11536"      # Angel One symbol token for TCS-EQ on NSE
+    bse_code: "532540"
+
+  # People
+  - id: chandrasekaran
+    name: N. Chandrasekaran
+    type: person
+    role: Chairman, TCS & Tata Sons
+    aliases: [Chandrasekaran, Chandra Tata]
+  - id: krithivasan
+    name: K. Krithivasan
+    type: person
+    role: CEO & MD
+    aliases: [Krithivasan]
+  - id: seksaria
+    name: Samir Seksaria
+    type: person
+    role: CFO
+    aliases: [Samir Seksaria, Seksaria]
+  - id: aarthi
+    name: Aarthi Subramanian
+    type: person
+    role: President & COO
+    aliases: [Aarthi Subramanian]
+
+  # Parent
+  - id: tata_sons
+    name: Tata Sons
+    type: parent
+    aliases: [Tata Sons, Tata Trusts]
+
+  # Projects
+  - id: hypervault
+    name: HyperVault AI data centre
+    type: project
+    role: ~1 GW AI data-centre build-out in India (announced Oct 2025)
+    aliases: [HyperVault]
+    query: 'TCS HyperVault OR "TCS data centre"'
+  - id: bsnl_4g
+    name: BSNL 4G/5G network rollout
+    type: project
+    role: Indigenous 4G stack build with Tejas Networks, C-DOT
+    aliases: [BSNL 4G, BSNL 5G, indigenous 4G]
+    query: '"BSNL 4G" TCS'
+
+  # Clients
+  - id: bsnl
+    name: BSNL
+    type: client
+    aliases: [BSNL, Bharat Sanchar Nigam]
+  - id: jlr
+    name: Jaguar Land Rover
+    type: client
+    role: Tata group company, major IT/ops client
+    aliases: [Jaguar Land Rover, JLR]
+  - id: mands
+    name: Marks & Spencer
+    type: client
+    aliases: [Marks & Spencer, Marks and Spencer, M&S]
+  - id: phoenix
+    name: Phoenix Group
+    type: client
+    role: UK insurer, large multi-year deal
+    aliases: [Phoenix Group]
+  - id: passport_seva
+    name: Passport Seva (MEA)
+    type: client
+    role: Government of India programme run by TCS
+    aliases: [Passport Seva]
+
+  # Partners
+  - id: tejas
+    name: Tejas Networks
+    type: partner
+    aliases: [Tejas Networks]
+    ticker: TEJASNET
+
+  # Competitors and bellwethers
+  - id: infosys
+    name: Infosys
+    type: competitor
+    aliases: [Infosys]
+    ticker: INFY
+  - id: hcltech
+    name: HCLTech
+    type: competitor
+    aliases: [HCLTech, HCL Tech, HCL Technologies]
+    ticker: HCLTECH
+  - id: wipro
+    name: Wipro
+    type: competitor
+    aliases: [Wipro]
+    ticker: WIPRO
+  - id: techm
+    name: Tech Mahindra
+    type: competitor
+    aliases: [Tech Mahindra]
+    ticker: TECHM
+  - id: accenture
+    name: Accenture
+    type: competitor
+    role: Global bellwether; its results move Indian IT
+    aliases: [Accenture]
+  - id: cognizant
+    name: Cognizant
+    type: competitor
+    aliases: [Cognizant]
+
+  # Macro / sector themes
+  - id: it_sector
+    name: Indian IT sector
+    type: theme
+    aliases: [Nifty IT, IT stocks, Indian IT, IT services sector, IT majors]
+  - id: h1b
+    name: US H-1B / visa policy
+    type: theme
+    aliases: [H-1B, H1B, H-1B visa]
+  - id: usdinr
+    name: USD/INR
+    type: theme
+    aliases: [rupee, USD/INR, dollar-rupee]
+    context: [IT, exporters, software, Infosys, TCS]
+  - id: us_bfsi
+    name: US BFSI tech spending
+    type: theme
+    role: BFSI is TCS's largest vertical
+    aliases: [BFSI, banking technology spend, bank IT budgets]
+  - id: genai
+    name: GenAI disruption / demand
+    type: theme
+    aliases: [generative AI, GenAI, agentic AI, AI deal]
+    context: [IT services, Indian IT, outsourcing, TCS, Infosys, Wipro, HCLTech]
+
+links:
+  - {from: chandrasekaran, to: TCS, relation: chairman, weight: 0.5, sign: 1}
+  - {from: krithivasan, to: TCS, relation: CEO, weight: 0.7, sign: 1}
+  - {from: seksaria, to: TCS, relation: CFO, weight: 0.5, sign: 1}
+  - {from: aarthi, to: TCS, relation: COO, weight: 0.4, sign: 1}
+  - {from: tata_sons, to: TCS, relation: promoter (~72% stake), weight: 0.4, sign: 1}
+  - {from: hypervault, to: TCS, relation: own project, weight: 0.4, sign: 1}
+  - {from: bsnl_4g, to: TCS, relation: own project, weight: 0.35, sign: 1}
+  - {from: bsnl, to: bsnl_4g, relation: client of project, weight: 0.8, sign: 1}
+  - {from: bsnl, to: TCS, relation: client, weight: 0.35, sign: 1}
+  - {from: jlr, to: TCS, relation: client, weight: 0.35, sign: 1}
+  - {from: mands, to: TCS, relation: client, weight: 0.15, sign: 1}
+  - {from: phoenix, to: TCS, relation: client, weight: 0.15, sign: 1}
+  - {from: passport_seva, to: TCS, relation: client (govt programme), weight: 0.15, sign: 1}
+  - {from: tejas, to: bsnl_4g, relation: partner on project, weight: 0.5, sign: 1}
+  - {from: infosys, to: TCS, relation: competitor, weight: 0.35, sign: -1}
+  - {from: hcltech, to: TCS, relation: competitor, weight: 0.3, sign: -1}
+  - {from: wipro, to: TCS, relation: competitor, weight: 0.25, sign: -1}
+  - {from: techm, to: TCS, relation: competitor, weight: 0.15, sign: -1}
+  - {from: accenture, to: TCS, relation: bellwether peer, weight: 0.35, sign: 1}
+  - {from: cognizant, to: TCS, relation: competitor, weight: 0.2, sign: -1}
+  - {from: it_sector, to: TCS, relation: sector, weight: 0.6, sign: 1}
+  - {from: h1b, to: TCS, relation: macro driver, weight: 0.35, sign: 1}
+  - {from: usdinr, to: TCS, relation: macro driver (weak rupee helps), weight: 0.3, sign: -1}
+  - {from: us_bfsi, to: TCS, relation: largest vertical, weight: 0.5, sign: 1}
+  - {from: genai, to: TCS, relation: demand / disruption, weight: 0.35, sign: 1}

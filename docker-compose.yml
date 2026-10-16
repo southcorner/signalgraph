@@ -1,0 +1,23 @@
+# Run on a small VPS (ideally in Mumbai, e.g. AWS ap-south-1) or your own PC.
+# Postgres is optional; drop the db service and DATABASE_URL to use SQLite.
+services:
+  app:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://signalgraph:signalgraph@db:5432/signalgraph
+    ports:
+      - "127.0.0.1:8000:8000"   # local only; put it behind a VPN/auth proxy if exposed
+    depends_on: [db]
+    restart: unless-stopped
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: signalgraph
+      POSTGRES_PASSWORD: signalgraph
+      POSTGRES_DB: signalgraph
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+volumes:
+  pgdata:

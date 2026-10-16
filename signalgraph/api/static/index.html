@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SignalGraph</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/vendor/cytoscape.min.js"></script>
+  <script src="/static/vendor/lightweight-charts.standalone.production.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">SignalGraph</div>
+    <select id="ticker" aria-label="Stock"></select>
+    <div class="quote">
+      <span id="price" class="price">—</span>
+      <span id="change" class="change"></span>
+    </div>
+    <div id="signal" class="signal neutral" title="Decayed news-impact score, -1 to +1">
+      <span class="sig-icon">●</span><span class="sig-label">NEUTRAL</span><span class="sig-score">0.00</span>
+    </div>
+    <div class="badges">
+      <span id="badge-prices" class="badge">Prices: …</span>
+      <span id="badge-scorer" class="badge">Scorer: …</span>
+      <span id="badge-ws" class="badge"><span class="dot"></span> Live push</span>
+    </div>
+  </header>
+
+  <main class="grid">
+    <section class="panel graph-panel">
+      <div class="panel-head">
+        <h2>Relationship graph</h2>
+        <div class="legend">
+          <span><i class="sw sw-red"></i>Bad news</span>
+          <span><i class="sw sw-neutral"></i>Quiet</span>
+          <span><i class="sw sw-green"></i>Good news</span>
+          <span class="muted">Dashed link = competitor · node ring = news volume</span>
+        </div>
+      </div>
+      <div id="cy" role="img" aria-label="Relationship graph of entities linked to the stock, coloured by news sentiment"></div>
+    </section>
+
+    <aside class="panel side-panel">
+      <div class="panel-head"><h2 id="side-title">Why this colour</h2><button id="side-reset" class="link" hidden>Back to drivers</button></div>
+      <div id="side-body"></div>
+    </aside>
+
+    <section class="panel chart-panel">
+      <div class="panel-head">
+        <h2>Price with news markers</h2>
+        <span class="muted">▲ good / ▼ bad for the stock · hover a bar for its news</span>
+      </div>
+      <div id="price-chart" class="chart"></div>
+      <div class="panel-head sub"><h2>Signal score</h2><span class="muted">−1 red … +1 green</span></div>
+      <div id="score-chart" class="chart short"></div>
+      <div id="chart-tip" class="chart-tip" hidden></div>
+    </section>
+
+    <section class="panel feed-panel">
+      <div class="panel-head"><h2>Live news &amp; filings</h2><span id="feed-filter" class="muted"></span></div>
+      <ol id="feed" class="feed"></ol>
+    </section>
+
+    <section class="panel status-panel">
+      <div class="panel-head"><h2>Upcoming</h2></div>
+      <ul id="calendar" class="plain"></ul>
+      <div class="panel-head sub"><h2>Sources</h2><span id="queue" class="muted"></span></div>
+      <ul id="health" class="plain health"></ul>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

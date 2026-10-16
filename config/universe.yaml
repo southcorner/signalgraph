@@ -1,0 +1,28 @@
+# Stocks to track. Add a ticker here plus a graph file in config/graphs/ to scale out.
+# Entities with the same id across graph files are merged, so shared nodes
+# (e.g. Infosys as a competitor of several IT stocks) are scored once.
+tickers:
+  - symbol: TCS
+    graph: graphs/TCS.yaml
+
+# Publisher RSS feeds. Every item is matched against all entity aliases;
+# items that mention no tracked entity are dropped before any LLM call.
+publisher_feeds:
+  - name: ET Markets
+    url: https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms
+  - name: ET Tech
+    url: https://economictimes.indiatimes.com/tech/rssfeeds/13357270.cms
+  - name: Moneycontrol
+    url: https://www.moneycontrol.com/rss/latestnews.xml
+  - name: Mint Companies
+    url: https://www.livemint.com/rss/companies
+  - name: Business Standard Companies
+    url: https://www.business-standard.com/rss/companies-101.rss
+
+# Poll intervals in seconds. Exchange filings are the fastest real signal.
+intervals:
+  nse_filings: 20
+  bse_filings: 20
+  board_meetings: 3600
+  publisher_feeds: 90
+  google_news: 180   # one query per entity, staggered across the interval
